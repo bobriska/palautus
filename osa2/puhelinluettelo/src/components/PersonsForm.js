@@ -15,9 +15,6 @@ const PersonsForm = ({newName, setNewName, newNumber, setNewNumber, persons, set
   
         const updateId = persons.filter(value => value.name === newName).map(value => value.id)[0]
         
-        console.log('new name ', newName)
-        console.log('update? ', updateId)
-
         if (updateId) {
             if (window.confirm(`${newName} is already in phonebook, do you want to update the number to ${newNumber}?`)) {
                 const personObject = {
