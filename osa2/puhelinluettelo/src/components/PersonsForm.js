@@ -12,32 +12,35 @@ const PersonsForm = ({newName, setNewName, newNumber, setNewNumber, persons, set
   
     const addPerson = (event) => {
         event.preventDefault()
-  
-        const updateId = persons.filter(value => value.name === newName).map(value => value.id)[0]
+
+        if( newName && newNumber ) { 
         
-        if (updateId) {
-            if (window.confirm(`${newName} is already in phonebook, do you want to update the number to ${newNumber}?`)) {
-                const personObject = {
-                    name: newName,
-                    number: newNumber,
-                    id: updateId,
-                }
-                const personsCopy = persons
-                personsCopy.filter(value => value.id === updateId)[0].number = newNumber
-                // update existing
-                personsService
-                    .update(updateId, personObject)
+
+            const updateId = persons.filter(value => value.name === newName).map(value => value.id)[0]
+
+            if (updateId) {
+                if (window.confirm(`${newName} is already in phonebook, do you want to update the number to ${newNumber}?`)) {
+                    const personObject = {
+                        name: newName,
+                        number: newNumber,
+                        id: updateId,
+                    }
+                    
+                    const personsCopy = persons.filter(value => value.id !== updateId)
+
+                    personsService
+                        .update(updateId, personObject)
                         .then(returnedPerson => {
-                            setPersons(personsCopy)
+                            setPersons(personsCopy.concat(personObject))
                             setTimedOutMsg(['success', `${newName} updated`])
                             setNewName('')
                             setNewNumber('')
                         }).catch(error => {
                             setTimedOutMsg(['error', `error updating person: ${error}`])
                         })
-            }  
-        } else {//not an update, adding new person
-            if( newName && newNumber ) { //shoud have some values in both name and number
+                }  
+            } else {//not an update, adding new person
+            
                 if (persons.filter(value => value.number === newNumber).length === 0) {
                     //new entries id is set larger than any previous, don't matter if missing eg 1,3,4
                     const max_id = Math.max(...persons.map(o => o.id))
@@ -55,14 +58,14 @@ const PersonsForm = ({newName, setNewName, newNumber, setNewNumber, persons, set
                             setNewNumber('')
                         })
                         .catch(error => {
-                            setTimedOutMsg(['error', `error adding person: ${error}`])
+                            setTimedOutMsg(['error', `Error adding person: ${error.response.data.error}`])
                         })
                 } else {
                     setTimedOutMsg(['error', `${newNumber} is already added to phonebook`])
-                }
-            } else {
-                setTimedOutMsg(['notification', 'empty values can\'t be added to phonebook'])
+                }    
             }
+        } else {
+            setTimedOutMsg(['notification', 'empty values can\'t be added to phonebook'])
         }
     }
   
