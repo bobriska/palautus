@@ -36,18 +36,15 @@ const PersonsForm = ({newName, setNewName, newNumber, setNewNumber, persons, set
                             setNewName('')
                             setNewNumber('')
                         }).catch(error => {
-                            setTimedOutMsg(['error', `error updating person: ${error}`])
+                            setTimedOutMsg(['error', `error updating person: ${error.response.data.error}`])
                         })
                 }  
             } else {//not an update, adding new person
             
                 if (persons.filter(value => value.number === newNumber).length === 0) {
-                    //new entries id is set larger than any previous, don't matter if missing eg 1,3,4
-                    const max_id = Math.max(...persons.map(o => o.id))
                     const personObject = {
                         name: newName,
                         number: newNumber,
-                        id: max_id + 1,
                     }
                     personsService
                         .create(personObject)

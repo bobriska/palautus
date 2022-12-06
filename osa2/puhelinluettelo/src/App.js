@@ -20,7 +20,7 @@ const App = () => {
       .getAll()
         .then(initialPersons => {
           setPersons(initialPersons)
-        })
+        }).catch(error => error)
   }, [])
 
   const setTimedOutMsg = (message) => {
