@@ -110,7 +110,7 @@ describe('favourite blog', () => {
 })
 
 
-describe('favourite blog', () => {
+describe('author with most blogs', () => {
 
   test('when empty list return empty', () => {
     const result = listHelper.mostBlogs(emptyList)
