@@ -1,15 +1,17 @@
 const blogRouter = require('express').Router()
 const Blog = require('../models/blog')
+const middleware = require('../utils/middleware')
 
 blogRouter.get('/', async (request, response) => {
-
-  const blogs = await Blog.find({})
+  const blogs = await Blog.find({}).populate('user', { name: 1, username: 1 })
   response.json(blogs)
-
 })
 
-blogRouter.post('/', async (request, response) => {
+
+
+blogRouter.post('/', middleware.userExtractor, async (request, response) => {
   const body = request.body
+  const user = request.user
 
   if (!(body.url && body.title)) {
     response.status(400).end()
@@ -19,22 +21,32 @@ blogRouter.post('/', async (request, response) => {
     title: body.title,
     author: body.author,
     url: body.url,
-    likes: body.likes || 0
+    likes: body.likes || 0,
+    user: user._id
   })
 
-  const result = await blog.save()
-  response.status(201).json(result)
+  const savedBlog = await blog.save()
+  user.blogs = user.blogs.concat(savedBlog._id)
+  await user.save()
+  response.status(201).json(savedBlog)
 
 })
 
-blogRouter.delete('/:id', async (request, response) => {
+blogRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
+  const user = request.user
 
-  const removed = await Blog.findByIdAndRemove(request.params.id)
+  const toBeRemoved = await Blog.findById(request.params.id)
 
-  if (removed) {
-    response.status(204).end()
+  if (toBeRemoved) {
+    if (toBeRemoved.user.toString() === user._id.toString()) {
+      const removed = await Blog.findByIdAndRemove(request.params.id)
+      if (removed) {
+        response.status(204).end()
+      }
+    }
+  } else {
+    response.status(404).send(`error: can't find id <${request.params.id}> to remove`)
   }
-  response.status(404).send(`error: can't find id <${request.params.id}> to remove`)
 })
 
 blogRouter.put('/:id', async (request, response) => {
@@ -47,7 +59,6 @@ blogRouter.put('/:id', async (request, response) => {
     likes: body.likes
   }
 
-  console.log('id ', request.params.id)
   const updated = await Blog.findByIdAndUpdate(request.params.id, blog, { new: true })
 
   if (updated) {
